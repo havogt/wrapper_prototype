@@ -14,26 +14,18 @@ using namespace gridtools::enumtype;
 using storage_info_t = storage_traits< Host >::storage_info_t< 0, 3 >;
 using data_store_t = storage_traits< Host >::data_store_t< float_type, storage_info_t >;
 
-class dycore : public wrapper_handler {
+class dycore : public wrappable {
   public:
     dycore() : meta_data_(5, 6, 7) {}
 
-    void push(/*std::string name, layout_t src_layout, ptr data, */) {
-        std::cout << "dycore received a push" << std::endl;
+    raw_storage get_raw_storage(std::string name) {
+        int *dims = new int[3]{2, 3, 4}; // TODO nice ctor to remove that leak
+        int *strides = new int[3]{1, 2, 6};
 
-        // TODO need to check if storage_info_t layout fits to the one coming in
-        //
-        // TODO do the copy
-    }
-    void pull() { std::cout << "dycore received a pull" << std::endl; }
+        raw_storage my_storage{nullptr, 3, dims, strides};
 
-    /*
-    layout_plus_dst get_destination( std::string name )
-    {
-        return {get_layout(meta_data_), fields["name"]};
+        return my_storage;
     }
-    void set_pointer_of_storage(void* ptr) {}
-    */
 
     //    void DoStep(output(), input(u), constant()) {
     //        if (!input_clean(input))
@@ -48,6 +40,4 @@ class dycore : public wrapper_handler {
   private:
     storage_info_t meta_data_;
     std::map< std::string, data_store_t > fields;
-    //        data_store_t u;
-    //    data_store_t v;
 };

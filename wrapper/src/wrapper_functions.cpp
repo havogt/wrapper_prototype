@@ -1,32 +1,26 @@
 #include "wrapper_functions.h"
 #include <iostream>
 
-wrapper_map *init_wrapper_map() {
-    wrapper_map *my_wrapper_map = new wrapper_map();
-    return my_wrapper_map;
-}
+bool same_layout(/**/) { return false; }
 
-void destroy_wrapper_map(wrapper_map *m) { delete m; }
-
-void push(wrapper_map *m, char *name, float *ptr, bool copy) {
-    m->field_map[std::string(name)] = wrapper_element{ptr, copy};
-    std::cout << "added " << std::string(name) << " with src ptr " << ptr << std::endl;
-    m->handle->push();
-}
-
-float *pull(wrapper_map *m, char *name) {
-    if (m->field_map.count(std::string(name)) > 0) {
-        wrapper_element elem = m->field_map.at(std::string(name));
-        std::cout << "pulling " << std::string(name) << " with ptr " << elem.ptr << std::endl;
-        if (elem.copy) {
-            std::cout << "   have to copy..." << std::endl;
-        }
-        m->handle->pull();
-        return elem.ptr;
+void push(wrappable *m, char *name, float *ptr, bool force_copy) {
+    std::cout << "push for " << std::string(name) << " with src ptr " << ptr << std::endl;
+    raw_storage storage = m->get_raw_storage(name);
+    if (!force_copy && same_layout()) {
+        std::cout << "We have the same layout we do ptr sharing mode" << std::endl;
+        //        m->set_external_ptr(name, ptr); TODO
     } else {
-        std::cout << "field " << std::string(name) << " does not exist!" << std::endl;
-        return NULL;
+        // TODO Do the copy based on the layout
     }
 }
 
-void set_handler(wrapper_map *m, wrapper_handler *h) { m->handle = h; }
+void pull(wrappable *m, char *name, float *ptr) {
+    std::cout << "pull for " << std::string(name) << " to ptr " << ptr << std::endl;
+    raw_storage storage = m->get_raw_storage(name);
+    if (ptr == (float *)storage.ptr) {
+        // We are in ptr sharing mode
+        // this case can be removed as it does nothing
+    } else {
+        // TODO do the copy back
+    }
+}

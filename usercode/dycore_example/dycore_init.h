@@ -5,12 +5,12 @@
 #define C_STRUCT_KEYWORD
 extern "C" {
 #else
-struct wrapper_handler;
+struct wrappable;
 #define C_STRUCT_KEYWORD struct
 #endif
 
-C_STRUCT_KEYWORD wrapper_handler *init_dycore();
-void destroy_dycore(C_STRUCT_KEYWORD wrapper_handler *);
+C_STRUCT_KEYWORD wrappable *init_dycore();
+void destroy_dycore(C_STRUCT_KEYWORD wrappable *);
 
 #ifdef __cplusplus
 }

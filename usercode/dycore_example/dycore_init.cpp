@@ -2,6 +2,6 @@
 #include "dycore.h"
 #include <iostream>
 
-wrapper_handler *init_dycore() { return new dycore(); }
+wrappable *init_dycore() { return new dycore(); }
 
-void destroy_dycore(wrapper_handler *m) { delete m; }
+void destroy_dycore(wrappable *m) { delete m; }

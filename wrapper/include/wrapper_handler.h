@@ -1,7 +1,14 @@
 #pragma once
+#include <string>
 
-class wrapper_handler {
+struct raw_storage {
+    void *ptr;
+    int ndims;
+    int *dims; // TODO smart ptrs
+    int *strides;
+};
+
+class wrappable {
   public:
-    virtual void push() = 0;
-    virtual void pull() = 0;
+    virtual raw_storage get_raw_storage(std::string name) = 0;
 };
