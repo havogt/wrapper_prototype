@@ -10,15 +10,30 @@
 #include "../../wrapper/include/wrappable.h"
 #include "dycore_helper.h"
 
+/**
+ * This is just an example to attach to state flags to the storage to allow a consistency check between fortran and cpp
+ */
+template < typename DataStore >
+struct dycore_field {
+    bool cpp_is_uptodate;
+    bool fortran_is_uptodate;
+    DataStore field;
+};
+
 class dycore : public wrappable {
   public:
     /**
+     * This function needs to be provided by a user of the gridtools wrapper
      * @param name Field name
      * @param dims Dimensions of the field coming from the wrapper, can be used to initialize a gridtools fields.
      */
     raw_storage get_raw_storage_for_push(std::string name, std::vector< int > dims) {
         if (fields.count(name) == 0) {
             // field was not pushed before
+
+            // Here it is the dycore responsibility how to handle fields (map, explicit types via a switch on the
+            // fieldname, etc...)
+            // I chose the map in this example as it is simplest
             storage_info_t meta_data(dims[0], dims[1], dims[2]);
             fields.emplace(name, dycore_field< data_store_t >{true, true, data_store_t(meta_data, name)});
             std::cout << "initialized a new gridtools field \"" << name << "\"" << std::endl;
@@ -31,6 +46,9 @@ class dycore : public wrappable {
         return make_raw_storage(fields[name]);
     }
 
+    /**
+    * This function needs to be provided by a user of the gridtools wrapper
+    */
     raw_storage get_raw_storage_for_pull(std::string name, std::vector< int > dims) {
         if (fields.count(name) == 0) {
             throw std::runtime_error("field is not initialized, cannot  pull");
@@ -42,7 +60,10 @@ class dycore : public wrappable {
         return make_raw_storage(fields[name]);
     }
 
-    // TODO this is just a placeholder for the input/output pattern which is not part of this design
+    /**
+     * This is an example of the consistency check handling.
+     * Some operations shoud be abstracted, e.g. outdate operation.
+     */
     template < typename Input, typename Output >
     void DoStep(Input input, Output output) {
         auto & [ u, v ] = input;

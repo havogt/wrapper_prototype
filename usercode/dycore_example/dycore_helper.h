@@ -27,13 +27,9 @@ using namespace gridtools::enumtype;
 using storage_info_t = storage_traits< Host >::storage_info_t< 0, 3 >;
 using data_store_t = storage_traits< Host >::data_store_t< float_type, storage_info_t >;
 
-template < typename DataStore >
-struct dycore_field {
-    bool cpp_is_uptodate;
-    bool fortran_is_uptodate;
-    DataStore field;
-};
-
+/**
+ * This function should be provided by the gridtools storage
+ */
 template < typename DataStore >
 raw_storage make_raw_storage(dycore_field< DataStore > &field) {
     // TODO use the field to produce this (currently fake) information
