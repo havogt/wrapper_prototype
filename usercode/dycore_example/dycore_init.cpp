@@ -1,6 +1,5 @@
-#include "dycore_init.h"
-#include "dycore.h"
 #include <iostream>
+#include "dycore_init.h"
 
 wrappable *init_dycore() { return new dycore(); }
 

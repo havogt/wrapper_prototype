@@ -22,43 +22,36 @@ struct dycore_field {
 
 class dycore : public wrappable {
   public:
-    /**
-     * This function needs to be provided by a user of the gridtools wrapper
-     * @param name Field name
-     * @param dims Dimensions of the field coming from the wrapper, can be used to initialize a gridtools fields.
-     */
-    raw_storage get_raw_storage_for_push(std::string name, std::vector< int > dims) {
-        if (fields.count(name) == 0) {
-            // field was not pushed before
+    abstract_storage_info get_abstract_storage_info(std::string name, std::vector< int > dims) override {
+        return make_abstract_storage_info(storage_info_t(dims[0], dims[1], dims[2]));
+    }
 
-            // Here it is the dycore responsibility how to handle fields (map, explicit types via a switch on the
-            // fieldname, etc...)
-            // I chose the map in this example as it is simplest
+    void init_optional(std::string name, std::vector< int > dims, bool external_ptr, void *ptr) override {
+        if (fields.count(name) == 0) {
             storage_info_t meta_data(dims[0], dims[1], dims[2]);
-            fields.emplace(name, dycore_field< data_store_t >{true, true, data_store_t(meta_data, name)});
-            std::cout << "initialized a new gridtools field \"" << name << "\"" << std::endl;
-        } else {
-            // field is already initialized: validate our copy
-            fields[name].cpp_is_uptodate = true;
-            std::cout << "\"" << name << " is already initialized; returning its info" << std::endl;
-        }
+            if (external_ptr) {
 
-        return make_raw_storage(fields[name]);
+                fields.emplace(name,
+                    dycore_field< data_store_t >{true,
+                        true,
+                        data_store_t(meta_data, (float_type *)ptr, gridtools::ownership::ExternalCPU, name)});
+                std::cout << "initialized a new gridtools field in pointer sharing mode" << std::endl;
+            } else {
+                fields.emplace(name, dycore_field< data_store_t >{true, true, data_store_t(meta_data, name)});
+                std::cout << "initialized a new gridtools field" << std::endl;
+            }
+        }
     }
 
-    /**
-    * This function needs to be provided by a user of the gridtools wrapper
-    */
-    raw_storage get_raw_storage_for_pull(std::string name, std::vector< int > dims) {
-        if (fields.count(name) == 0) {
-            throw std::runtime_error("field is not initialized, cannot  pull");
-        } else {
-            std::cout << "\"" << name << " is initialized; returning its info" << std::endl;
-            fields[name].fortran_is_uptodate = true;
-        }
-
-        return make_raw_storage(fields[name]);
+    void *get_pointer(std::string name) override {
+        if (fields.count(name) > 0) {
+            return (void *)fields[name].field.get_storage_ptr()->get_cpu_ptr();
+        } else
+            return nullptr;
     }
+
+    void notify_push(std::string name) override { fields[name].cpp_is_uptodate = true; };
+    void notify_pull(std::string name) override { fields[name].fortran_is_uptodate = true; };
 
     /**
      * This is an example of the consistency check handling.
@@ -95,6 +88,7 @@ class dycore : public wrappable {
 
         return uptodate;
     }
+
     bool check_fortran_fields_uptodate() {
         bool uptodate = true;
         for (auto &field : fields) {
@@ -110,6 +104,5 @@ class dycore : public wrappable {
     }
 
   private:
-    storage_info_t meta_data_;
     std::map< std::string, dycore_field< data_store_t > > fields;
 };
