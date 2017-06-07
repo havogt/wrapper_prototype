@@ -1,20 +1,22 @@
 #pragma once
-
 #ifdef __cplusplus
 #include "wrappable.h"
-#define C_STRUCT_KEYWORD
 extern "C" {
 #else
-struct wrappable;
-#define C_STRUCT_KEYWORD struct
+typedef struct wrappable {} wrappable;
 #endif
 
-void push(C_STRUCT_KEYWORD wrappable *h, char *name, float *ptr, int ndims, int *dims, int *strides, bool copy);
-void pull(C_STRUCT_KEYWORD wrappable *h, char *name, float *ptr, int ndims, int *dims, int *strides);
-void call_do_step(C_STRUCT_KEYWORD wrappable *h);
-
+wrappable* create_wrapper(const char* name);
+void push(wrappable *h, char *name, float *ptr, int ndims, int *dims, int *strides, bool copy);
+void pull(wrappable *h, char *name, float *ptr, int ndims, int *dims, int *strides);
+int call(wrappable *h, const char* action);
+int destroy_wrapper(wrappable* m);
 #ifdef __cplusplus
 }
+
+#include <string>
+#include <functional>
+bool register_wrapper_factory(std::string name, std::function<wrappable*()> func);
 #endif
 
 #undef C_STRUCT_KEYWORD
