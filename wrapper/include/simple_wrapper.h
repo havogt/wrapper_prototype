@@ -30,6 +30,10 @@ class simple_wrapper {};
 template < template < typename, typename > class DataStore, typename Storage, typename StorageInfo >
 class simple_wrapper< DataStore< Storage, StorageInfo > > : public wrappable {
   public:
+
+    simple_wrapper() = default;
+    virtual ~simple_wrapper() = default;
+
     using data_store_t = DataStore< Storage, StorageInfo >;
 
     abstract_storage_info get_abstract_storage_info(std::string name, std::vector< int > dims) override {
@@ -60,10 +64,13 @@ class simple_wrapper< DataStore< Storage, StorageInfo > > : public wrappable {
             return nullptr;
     }
 
-    void notify_push(std::string name) override{};
-    void notify_pull(std::string name) override{};
+    void notify_push(std::string name) override {};
+    void notify_pull(std::string name) override {};
 
-    virtual void do_step() = 0;
+    virtual int call(const std::string &action) override {
+        std::cout << "Simple wrapper received call to do: " << action;
+        return WRAPPER_RETURN_SUCCESS;
+    }
 
   private:
     std::map< std::string, data_store_t > fields;

@@ -2,6 +2,10 @@
 #include <string>
 #include <vector>
 
+
+#define WRAPPER_RETURN_SUCCESS 1
+#define WRAPPER_RETURN_FAILURE 0
+
 struct raw_storage {
     bool initialized;
     void *ptr;
@@ -26,11 +30,13 @@ abstract_storage_info make_abstract_storage_info(const StorageInfo &info) {
 
 class wrappable {
   public:
+    virtual ~wrappable() = default;
+
     virtual abstract_storage_info get_abstract_storage_info(std::string name, std::vector< int > dims) = 0;
     virtual void init_optional(std::string name, std::vector< int > dims, bool external_ptr, void *ptr) = 0;
     virtual void *get_pointer(std::string name) = 0;
     virtual void notify_push(std::string name) = 0;
     virtual void notify_pull(std::string name) = 0;
 
-    virtual void do_step() = 0;
+    virtual int call(const std::string& action) = 0;
 };
