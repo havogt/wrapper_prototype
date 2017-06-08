@@ -15,37 +15,37 @@ int main() {
 
     float *my_field = (float *)malloc(total_size * sizeof(float));
 
-    struct wrappable *dycore = create_wrapper("dycore");
+    struct wrappable *dycore = gt_wrapper_create("dycore");
 
     int ndim = 3;
     int dims[3] = {Ni, Nj, Nk};
     int strides[3] = {1, 2, 6};
 
-    push(dycore, "some_output", my_field, ndim, dims, strides, false);
+    gt_wrapper_push(dycore, "some_output", my_field, ndim, dims, strides, false);
     printf("---------------------\n");
 
-    push(dycore, "some_input", my_field, ndim, dims, strides, false);
+    gt_wrapper_push(dycore, "some_input", my_field, ndim, dims, strides, false);
     printf("---------------------\n");
-    push(dycore, "some_input", my_field, ndim, dims, strides, false);
+    gt_wrapper_push(dycore, "some_input", my_field, ndim, dims, strides, false);
     printf("---------------------\n");
 
-    call(dycore, "init");
-    call(dycore, "DoStep");
+    gt_wrapper_call(dycore, "init");
+    gt_wrapper_call(dycore, "DoStep");
 
     printf("---------------------\n");
-    if (call(dycore, "check_fortran_fields_uptodate") == 0) {
+    if (gt_wrapper_call(dycore, "check_fortran_fields_uptodate") == 0) {
         printf("fortran fields are not up-to-date: That is expected! NICE!(\n");
     } else {
         printf("fortran fields are uptodate, but they shouldn't: NOT NICE!\n");
     }
 
-    pull(dycore, "some_output", my_field, ndim, dims, strides);
+    gt_wrapper_pull(dycore, "some_output", my_field, ndim, dims, strides);
     printf("---------------------\n");
-    if (call(dycore, "check_fortran_fields_uptodate") == 0) {
+    if (gt_wrapper_call(dycore, "check_fortran_fields_uptodate") == 0) {
         printf("fortran fields are not up-to-date: NOT NICE!(\n");
     } else {
         printf("fortran fields are uptodate. NICE!\n");
     }
 
-    destroy_wrapper(dycore);
+    gt_wrapper_destroy(dycore);
 }

@@ -19,13 +19,17 @@ namespace internal {
     bool same_layout(abstract_storage_info info, int ndims, int *dims, int *strides) { return false; }
 }
 
-void push(wrappable *m, char *name, float *ptr, int ndims, int *dims, int *strides, bool force_copy) {
+void gt_wrapper_push(wrappable *m, char *name, float *ptr, int ndims, int *dims, int *strides, bool force_copy) {
     std::cout << "push for " << std::string(name) << " with src ptr " << ptr << std::endl;
     auto dims_vector = internal::make_dim_vector(ndims, dims);
     abstract_storage_info info = m->get_abstract_storage_info(name, dims_vector);
 
     bool external_ptr_mode = !force_copy && internal::same_layout(info, ndims, dims, strides);
-    m->init_optional(name, dims_vector, external_ptr_mode, ptr); // ptr can be nullptr if !external_ptr_mode
+
+    if (!m->is_initialized(name))
+        m->init(name, dims_vector, external_ptr_mode, ptr); // ptr can be nullptr if !external_ptr_mode
+    else if (external_ptr_mode)
+        m->set_external_pointer(name, ptr);
 
     float *dst_ptr = (float *)m->get_pointer(name);
 
@@ -35,7 +39,7 @@ void push(wrappable *m, char *name, float *ptr, int ndims, int *dims, int *strid
     m->notify_push(name);
 }
 
-void pull(wrappable *m, char *name, float *ptr, int ndims, int *dims, int *strides) {
+void gt_wrapper_pull(wrappable *m, char *name, float *ptr, int ndims, int *dims, int *strides) {
     std::cout << "pull for " << std::string(name) << " to ptr " << ptr << std::endl;
 
     float *src_ptr = (float *)m->get_pointer(name);
@@ -53,7 +57,9 @@ void pull(wrappable *m, char *name, float *ptr, int ndims, int *dims, int *strid
     m->notify_pull(name);
 }
 
-int call(wrappable *h, const char *action) { return h->call(std::string(action)); }
+int gt_wrapper_call(wrappable *h, const char *action) { return h->call(std::string(action)); }
+
+int gt_wrapper_call_proc(wrappable *h, const char *action, void *data) { return h->call(std::string(action), data); }
 
 /**
  * @brief Getter to obtain the wrapper factories. Due to the static initialization order this
@@ -67,6 +73,19 @@ std::map< std::string, std::function< wrappable *() > > &get_wrapper_factories()
     return map;
 }
 
+wrappable *gt_wrapper_create(const char *name) {
+    std::cout << "creating wrapper" << std::endl;
+    const auto namestr = std::string(name);
+    auto &factories = get_wrapper_factories();
+    if (factories.find(namestr) == factories.end()) {
+
+        throw std::runtime_error("create_wrapper: Wrapper with name " + namestr + " is not registered.");
+    }
+    return factories[namestr]();
+}
+
+void gt_wrapper_destroy(wrappable *m) { delete m; }
+
 /**
  * @brief Register a wrappable factory with the wrapper
  * @param name of the factory
@@ -78,15 +97,3 @@ bool register_wrapper_factory(std::string name, std::function< wrappable *() > f
     get_wrapper_factories()[name] = func;
     return true;
 }
-
-wrappable *create_wrapper(const char *name) {
-    const auto namestr = std::string(name);
-    auto &factories = get_wrapper_factories();
-    if (factories.find(namestr) == factories.end()) {
-
-        throw std::runtime_error("create_wrapper: Wrapper with name " + namestr + " is not registered.");
-    }
-    return factories[namestr]();
-}
-
-void destroy_wrapper(wrappable *m) { delete m; }

@@ -22,40 +22,43 @@ struct dycore_field {
     DataStore field;
 };
 
-class DycoreWrapper : public wrappable {
+class Dycore : public wrappable {
   public:
-    abstract_storage_info get_abstract_storage_info(std::string name, std::vector< int > dims) override {
+    abstract_storage_info get_abstract_storage_info(const std::string &name, std::vector< int > dims) override {
         return make_abstract_storage_info(storage_info_t(dims[0], dims[1], dims[2]));
     }
 
-    void init_optional(std::string name, std::vector< int > dims, bool external_ptr, void *ptr) override {
-        if (fields_.count(name) == 0) {
-            storage_info_t meta_data(dims[0], dims[1], dims[2]);
-            if (external_ptr) {
+    bool is_initialized(const std::string &name) override { return fields_.count(name) > 0; }
 
-                fields_.emplace(name,
-                    dycore_field< data_store_t >{true,
-                        true,
-                        data_store_t(meta_data, (float_type *)ptr, gridtools::ownership::ExternalCPU, name)});
-                std::cout << "initialized a new gridtools field in pointer sharing mode" << std::endl;
-            } else {
-                fields_.emplace(name, dycore_field< data_store_t >{true, true, data_store_t(meta_data, name)});
-                std::cout << "initialized a new gridtools field" << std::endl;
-            }
+    void set_external_pointer(const std::string &name, float *ptr) override {
+        // TODO set the external ptr in the existing gridtools field
+    }
+
+    void init(const std::string &name, std::vector< int > dims, bool external_ptr, void *ptr) override {
+        storage_info_t meta_data(dims[0], dims[1], dims[2]);
+        if (external_ptr) {
+
+            fields_.emplace(name,
+                dycore_field< data_store_t >{
+                    true, true, data_store_t(meta_data, (float_type *)ptr, gridtools::ownership::ExternalCPU, name)});
+            std::cout << "initialized a new gridtools field in pointer sharing mode" << std::endl;
+        } else {
+            fields_.emplace(name, dycore_field< data_store_t >{true, true, data_store_t(meta_data, name)});
+            std::cout << "initialized a new gridtools field" << std::endl;
         }
     }
 
-    void *get_pointer(std::string name) override {
+    void *get_pointer(const std::string &name) override {
         if (fields_.count(name) > 0) {
             return (void *)fields_[name].field.get_storage_ptr()->get_cpu_ptr();
         } else
             return nullptr;
     }
 
-    void notify_push(std::string name) override { fields_[name].cpp_is_uptodate = true; };
-    void notify_pull(std::string name) override { fields_[name].fortran_is_uptodate = true; };
+    void notify_push(const std::string &name) override { fields_[name].cpp_is_uptodate = true; };
+    void notify_pull(const std::string &name) override { fields_[name].fortran_is_uptodate = true; };
 
-    virtual int call(const std::string &action) override {
+    int call(const std::string &action) override {
         if (action == "init") {
             std::cout << "Init" << std::endl;
             // Prepare configuration
@@ -76,7 +79,15 @@ class DycoreWrapper : public wrappable {
         if (action == "check_fortran_fields_uptodate") {
             return check_fortran_fields_uptodate();
         }
-        throw std::runtime_error("DycoreWrapper.h: Action " + action + " is unknown");
+
+        std::cout << "Got Action " << action << " but don't know how to handle" << std::endl;
+        return -1;
+        //        throw std::runtime_error("DycoreWrapper.h: Action " + action + " is unknown");
+    }
+
+    int call(const std::string &action, void *data) override {
+        std::cout << "action: " << action << ", value = " << *static_cast< float * >(data) << std::endl;
+        return 0;
     }
 
     bool check_cpp_fields_uptodate() {
