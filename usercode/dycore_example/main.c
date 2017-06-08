@@ -3,7 +3,6 @@
 #include <stdbool.h>
 
 #include "../../wrapper/include/wrapper_functions.h"
-#include "dycore_init.h"
 
 int main() {
     printf("main()\n");
@@ -16,7 +15,7 @@ int main() {
 
     float *my_field = (float *)malloc(total_size * sizeof(float));
 
-    struct wrappable *dycore = init_dycore();
+    struct wrappable *dycore = create_wrapper("dycore");
 
     int ndim = 3;
     int dims[3] = {Ni, Nj, Nk};
@@ -30,22 +29,26 @@ int main() {
     push(dycore, "some_input", my_field, ndim, dims, strides, false);
     printf("---------------------\n");
 
-    call_do_step(dycore);
+    call(dycore, "init");
+    call(dycore, "DoStep");
 
     printf("---------------------\n");
-    if (!check_fortran_fields_uptodate(dycore)) {
-        printf("fortran fields are not up-to-date :(\n");
+    printf("output of check_fortran: %d\n", call(dycore, "check_fortran_fields_uptodate"));
+    if (call(dycore, "check_fortran_fields_uptodate") == 0) {
+        printf("fortran fields are not up-to-date: That is expected! NICE!(\n");
     } else {
-        printf("fortran fields are uptodate. NICE!\n");
+        printf("fortran fields are uptodate, but they shouldn't: NOT NICE!\n");
     }
 
     pull(dycore, "some_output", my_field, ndim, dims, strides);
     printf("---------------------\n");
-    if (!check_fortran_fields_uptodate(dycore)) {
-        printf("fortran fields are not up-to-date :(\n");
+    printf("output of check_fortran: %d\n", call(dycore, "check_fortran_fields_uptodate"));
+
+    if (call(dycore, "check_fortran_fields_uptodate") == 0) {
+        printf("fortran fields are not up-to-date: NOT NICE!(\n");
     } else {
         printf("fortran fields are uptodate. NICE!\n");
     }
 
-    destroy_dycore(dycore);
+    destroy_wrapper(dycore);
 }
