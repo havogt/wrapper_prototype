@@ -74,7 +74,6 @@ class DycoreWrapper : public wrappable {
             return check_cpp_fields_uptodate();
         }
         if (action == "check_fortran_fields_uptodate") {
-            std::cout << "Fortran fields are " << check_fortran_fields_uptodate() << std::endl;
             return check_fortran_fields_uptodate();
         }
         throw std::runtime_error("DycoreWrapper.h: Action " + action + " is unknown");

@@ -53,7 +53,7 @@ void pull(wrappable *m, char *name, float *ptr, int ndims, int *dims, int *strid
     m->notify_pull(name);
 }
 
-int call(wrappable *h, const char *action) { h->call(std::string(action)); }
+int call(wrappable *h, const char *action) { return h->call(std::string(action)); }
 
 /**
  * @brief Getter to obtain the wrapper factories. Due to the static initialization order this

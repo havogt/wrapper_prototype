@@ -33,7 +33,6 @@ int main() {
     call(dycore, "DoStep");
 
     printf("---------------------\n");
-    printf("output of check_fortran: %d\n", call(dycore, "check_fortran_fields_uptodate"));
     if (call(dycore, "check_fortran_fields_uptodate") == 0) {
         printf("fortran fields are not up-to-date: That is expected! NICE!(\n");
     } else {
@@ -42,8 +41,6 @@ int main() {
 
     pull(dycore, "some_output", my_field, ndim, dims, strides);
     printf("---------------------\n");
-    printf("output of check_fortran: %d\n", call(dycore, "check_fortran_fields_uptodate"));
-
     if (call(dycore, "check_fortran_fields_uptodate") == 0) {
         printf("fortran fields are not up-to-date: NOT NICE!(\n");
     } else {
