@@ -60,7 +60,7 @@ class Dycore : public wrappable {
 
     int call(const std::string &action) override {
         if (action == "init") {
-            std::cout << "Init" << std::endl;
+            std::cout << "[C++] Init" << std::endl;
             // Prepare configuration
             return WRAPPER_RETURN_SUCCESS;
         }
@@ -80,13 +80,15 @@ class Dycore : public wrappable {
             return check_fortran_fields_uptodate();
         }
 
-        std::cout << "Got Action " << action << " but don't know how to handle" << std::endl;
+        std::cout << "[C++] Got Action " << action << " but don't know how to handle" << std::endl;
         return -1;
         //        throw std::runtime_error("DycoreWrapper.h: Action " + action + " is unknown");
     }
 
     int call(const std::string &action, void *data) override {
-        std::cout << "action: " << action << ", value = " << *static_cast< float * >(data) << std::endl;
+        std::cout << "[C++] action: " << action << ", value = " << *static_cast< int * >(data) << std::endl;
+        *static_cast< int * >(data) += 5;
+        std::cout << "[C++] add 5 to first value, new value = " << *static_cast< int * >(data) << std::endl;
         return 0;
     }
 

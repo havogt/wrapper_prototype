@@ -8,7 +8,8 @@ target_link_libraries( dycore_example wrapper )
 
 add_library( dycore_library "dycore_example/Dycore.cpp" )
 
-add_executable( dycore_example_fortran "dycore_example/main.f90" )
+# TODO: build wrapper_functions.f90 as module
+add_executable( dycore_example_fortran "dycore_example/main.f90" "../wrapper/src/wrapper_functions.f90")
 target_link_libraries( dycore_example_fortran wrapper )
 
 # whole archive needed as otherwise the static initializiation won't happen
