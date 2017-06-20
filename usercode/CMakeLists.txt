@@ -13,4 +13,9 @@ add_executable( dycore_example_fortran "dycore_example/main.f90" "../wrapper/src
 target_link_libraries( dycore_example_fortran wrapper )
 
 # whole archive needed as otherwise the static initializiation won't happen
-target_link_libraries( dycore_example_fortran -Wl,--whole-archive dycore_library -Wl,--no-whole-archive )
+if (APPLE)
+    target_link_libraries( dycore_example_fortran -Wl,-all_load dycore_library -Wl,-noall_load )
+else()
+    target_link_libraries( dycore_example_fortran -Wl,--whole-archive dycore_library -Wl,--no-whole-archive )
+endif()
+#target_link_libraries( dycore_example_fortran dycore_library )

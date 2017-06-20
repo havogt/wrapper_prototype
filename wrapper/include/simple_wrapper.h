@@ -36,11 +36,11 @@ class simple_wrapper< DataStore< Storage, StorageInfo > > : public wrappable {
 
     using data_store_t = DataStore< Storage, StorageInfo >;
 
-    abstract_storage_info get_abstract_storage_info(std::string name, std::vector< int > dims) override {
+    abstract_storage_info get_abstract_storage_info(const std::string &name, std::vector< int > dims) override {
         return make_abstract_storage_info(StorageInfo(dims[0], dims[1], dims[2])); // TODO generalize dims
     }
 
-    void init_optional(std::string name, std::vector< int > dims, bool external_ptr, void *ptr) override {
+    void init(const std::string& name, std::vector< int > dims, bool external_ptr, void *ptr) override {
         if (fields.count(name) == 0) {
             StorageInfo meta_data(dims[0], dims[1], dims[2]);
             if (external_ptr) {
@@ -57,15 +57,18 @@ class simple_wrapper< DataStore< Storage, StorageInfo > > : public wrappable {
         }
     }
 
-    void *get_pointer(std::string name) override {
+    void *get_pointer(const std::string& name) override {
         if (fields.count(name) > 0) {
             return (void *)fields[name].get_storage_ptr()->get_cpu_ptr();
         } else
             return nullptr;
     }
 
-    void notify_push(std::string name) override {};
-    void notify_pull(std::string name) override {};
+    void notify_push(const std::string& name) override {};
+    void notify_pull(const std::string& name) override {};
+
+    bool is_initialized(const std::string &name) override {};
+    void set_external_pointer(const std::string &name, float *ptr) override {};
 
     virtual int call(const std::string &action) override {
         std::cout << "Simple wrapper received call to do: " << action;
